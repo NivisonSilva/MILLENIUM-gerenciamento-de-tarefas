@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerenciador de Tarefas - MILLENIUM Gerenciador de Tarefas</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to bottom, #003366);
+        color: white;
+        margin: 0;
+        padding: 0;
+      }
+      .container,
+      .login-container,
+      .register-container,
+      .task-container,
+      .admin-reports {
+        max-width: 800px;
+        width: 100%;
+        background: #003366;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        margin: 20px auto;
+        display: none;
+      }
+      .container.active,
+      .login-container.active,
+      .register-container.active,
+      .task-container.active,
+      .admin-reports.active {
+        display: block;
+      }
+      h1,
+      h2 {
+        text-align: center;
+        color: #fff;
+      }
+      input[type="text"],
+      input[type="password"],
+      input[type="email"],
+      input[type="date"],
+      select {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #444;
+        color: white;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        margin: 5px 0;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .tarefa-baixa {
+        background-color: #35ff02; /* Verde */
+      }
+      .tarefa-media {
+        background-color: #ffc107; /* Amarelo */
+      }
+      .tarefa-alta {
+        background-color: #dc3545; /* Vermelho */
+      }
+      .tarefa-concluida {
+        background-color: #02005c; /* Azul */
+      }
+      .link {
+        display: block;
+        text-align: center;
+        margin-top: 10px;
+        color: #007bff;
+        cursor: pointer;
+      }
+      .tarefa-info {
+        max-width: 70%;
+      }
+      .editar-btn,
+      .concluir-btn {
+        background-color: #ffc107;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        color: black;
+      }
+      .editar-btn:hover,
+      .concluir-btn:hover {
+        background-color: #e0a800;
+      }
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: #222;
+        color: white;
+        margin-bottom: 20px;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+      }
+      .navbar #logo {
+        font-size: 24px;
+      }
+      .navbar #navbar-buttons {
+        display: flex;
+        gap: 12px; /* Espaço entre os botões */
+      }
+      .navbar button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px;
+        cursor: pointer;
+      }
+      .navbar button:hover {
+        background-color: #0056b3;
+      }
+      .navbar.hidden {
+        display: none;
+      }
+      .admin-reports table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .admin-reports th,
+      .admin-reports td {
+        padding: 10px;
+        border: 1px solid #ddd;
+      }
+      .admin-reports th {
+        background-color: #444;
+      }
+      .admin-reports tr:nth-child(even) {
+        background-color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <div class="navbar hidden" id="navbar">
+      <div id="logo">MILLENIUM Gerenciador de Tarefas</div>
+      <div id="navbar-buttons">
+        <button id="logoutButton" onclick="logout()">Sair</button>
+        <button
+          id="viewReportsButton"
+          class="hidden"
+          onclick="showAdminReports()"
+        >
+          Ver Cadastros
+        </button>
+        <button
+          id="backButton"
+          class="hidden"
+          onclick="showTaskManagerFromReports()"
+        >
+          Voltar
+        </button>
+      </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="login-container active" id="loginContainer">
+      <h1>Login</h1>
+      <input type="email" id="loginEmail" placeholder="E-mail" required />
+      <input type="password" id="loginPassword" placeholder="Senha" required />
+      <button onclick="login()">Entrar</button>
+      <div class="link" onclick="showRegister()">Cadastre-se</div>
+    </div>
+
+    <!-- Tela de Cadastro -->
+    <div class="register-container" id="registerContainer">
+      <h1>Cadastro</h1>
+      <input type="text" id="registerName" placeholder="Nome" required />
+      <input
+        type="text"
+        id="registerSurname"
+        placeholder="Sobrenome"
+        required
+      />
+      <input type="email" id="registerEmail" placeholder="E-mail" required />
+      <input
+        type="password"
+        id="registerPassword"
+        placeholder="Senha"
+        required
+      />
+      <select id="registerRole" required>
+        <option value="">Selecione a Função</option>
+        <option value="Desenvolvedor">Desenvolvedor</option>
+        <option value="Documentação">Documentação</option>
+        <option value="Expansão">Expansão</option>
+        <option value="Admin">Admin</option>
+      </select>
+      <button onclick="register()">Cadastrar</button>
+      <div class="link" onclick="showLogin()">Já tem uma conta? Faça login</div>
+    </div>
+
+    <!-- Gerenciador de Tarefas -->
+    <div class="task-container" id="taskContainer">
+      <h1>Gerenciador de Tarefas</h1>
+      <input type="text" id="descricao" placeholder="Descrição da tarefa" />
+      <select id="prioridade">
+        <option value="baixa">Baixa</option>
+        <option value="média">Média</option>
+        <option value="alta">Alta</option>
+      </select>
+      <input type="date" id="data_vencimento" />
+      <input type="text" id="categoria" placeholder="Categoria da tarefa" />
+      <button id="saveButton" onclick="adicionarTarefa()">
+        Adicionar Tarefa
+      </button>
+      <h2>Lista de Tarefas</h2>
+      <ul id="listaTarefas"></ul>
+    </div>
+
+    <!-- Relatórios Admin -->
+    <div class="admin-reports" id="adminReports">
+      <h1>Relatórios de Cadastros</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Sobrenome</th>
+            <th>E-mail</th>
+            <th>Função</th>
+            <th>Senha</th>
+          </tr>
+        </thead>
+        <tbody id="cadastroTable"></tbody>
+      </table>
+    </div>
+
+    <script>
+      let currentUser = null;
+      let tarefas = [];
+      let users = []; // Mock user data
+      let tarefaEmEdicao = null;
+
+      function showLogin() {
+        document.getElementById("loginContainer").classList.add("active");
+        document.getElementById("registerContainer").classList.remove("active");
+        document.getElementById("taskContainer").classList.remove("active");
+        document.getElementById("adminReports").classList.remove("active");
+        document.getElementById("navbar").classList.add("hidden");
+      }
+
+      function showRegister() {
+        document.getElementById("loginContainer").classList.remove("active");
+        document.getElementById("registerContainer").classList.add("active");
+      }
+
+      function showTaskManager() {
+        if (currentUser) {
+          document.getElementById("loginContainer").classList.remove("active");
+          document
+            .getElementById("registerContainer")
+            .classList.remove("active");
+          document.getElementById("taskContainer").classList.add("active");
+          document.getElementById("navbar").classList.remove("hidden");
+          if (currentUser.role === "Admin") {
+            document
+              .getElementById("viewReportsButton")
+              .classList.remove("hidden");
+          }
+        }
+      }
+
+      function showAdminReports() {
+        document.getElementById("taskContainer").classList.remove("active");
+        document.getElementById("adminReports").classList.add("active");
+        document.getElementById("navbar").classList.remove("hidden");
+        document.getElementById("backButton").classList.remove("hidden");
+        atualizarTabelaCadastro();
+      }
+
+      function showTaskManagerFromReports() {
+        document.getElementById("adminReports").classList.remove("active");
+        document.getElementById("taskContainer").classList.add("active");
+        document.getElementById("backButton").classList.add("hidden");
+      }
+
+      function login() {
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+        currentUser = users.find(
+          (user) => user.email === email && user.password === password
+        );
+        if (currentUser) {
+          showTaskManager();
+        } else {
+          alert("E-mail ou senha incorretos");
+        }
+      }
+
+      function register() {
+        const name = document.getElementById("registerName").value;
+        const surname = document.getElementById("registerSurname").value;
+        const email = document.getElementById("registerEmail").value;
+        const password = document.getElementById("registerPassword").value;
+        const role = document.getElementById("registerRole").value;
+
+        if (users.some((user) => user.email === email)) {
+          alert("Usuário já cadastrado");
+        } else {
+          users.push({ name, surname, email, password, role });
+          alert("Usuário cadastrado com sucesso");
+          showLogin();
+        }
+      }
+
+      function adicionarTarefa() {
+        const descricao = document.getElementById("descricao").value;
+        const prioridade = document.getElementById("prioridade").value;
+        const dataVencimento = document.getElementById("data_vencimento").value;
+        const categoria = document.getElementById("categoria").value;
+
+        if (tarefaEmEdicao !== null) {
+          tarefas[tarefaEmEdicao] = {
+            descricao,
+            prioridade,
+            dataVencimento,
+            categoria,
+          };
+          tarefaEmEdicao = null;
+          document.getElementById("saveButton").textContent =
+            "Adicionar Tarefa";
+        } else {
+          tarefas.push({
+            descricao,
+            prioridade,
+            dataVencimento,
+            categoria,
+          });
+        }
+
+        atualizarListaTarefas();
+      }
+
+      function editarTarefa(index) {
+        const tarefa = tarefas[index];
+        document.getElementById("descricao").value = tarefa.descricao;
+        document.getElementById("prioridade").value = tarefa.prioridade;
+        document.getElementById("data_vencimento").value =
+          tarefa.dataVencimento;
+        document.getElementById("categoria").value = tarefa.categoria;
+
+        document.getElementById("saveButton").textContent = "Salvar alterações";
+        tarefaEmEdicao = index;
+      }
+
+      function concluirTarefa(index) {
+        tarefas[index].concluida = true;
+        atualizarListaTarefas();
+      }
+
+      function atualizarListaTarefas() {
+        const listaTarefas = document.getElementById("listaTarefas");
+        listaTarefas.innerHTML = "";
+
+        tarefas.forEach((tarefa, index) => {
+          const li = document.createElement("li");
+          li.className = tarefa.concluida
+            ? "tarefa-concluida"
+            : `tarefa-${tarefa.prioridade}`;
+          li.innerHTML = `
+                    <span class="tarefa-info">${tarefa.descricao} - ${tarefa.prioridade} - ${tarefa.dataVencimento} - ${tarefa.categoria}</span>
+                    <button class="editar-btn" onclick="editarTarefa(${index})">Editar</button>
+                    <button class="concluir-btn" onclick="concluirTarefa(${index})">Concluir</button>
+                `;
+          listaTarefas.appendChild(li);
+        });
+      }
+
+      function atualizarTabelaCadastro() {
+        const cadastroTable = document.getElementById("cadastroTable");
+        cadastroTable.innerHTML = "";
+
+        users.forEach((user) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.surname}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.password}</td>
+                `;
+          cadastroTable.appendChild(tr);
+        });
+      }
+
+      function logout() {
+        currentUser = null;
+        tarefas = [];
+        document.getElementById("loginContainer").classList.add("active");
+        document.getElementById("taskContainer").classList.remove("active");
+        document.getElementById("adminReports").classList.remove("active");
+        document.getElementById("navbar").classList.add("hidden");
+        document.getElementById("backButton").classList.add("hidden");
+      }
+    </script>
+  </body>
+</html>
